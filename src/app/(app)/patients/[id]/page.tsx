@@ -117,24 +117,24 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
         }
       />
     ) : (
-      <ul className="space-y-3">
+      <div className="divide-y overflow-hidden rounded-xl border">
         {exams.map((e) => (
-          <li
+          <div
             key={e.id}
-            className="flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center"
+            className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center"
           >
             <div className="min-w-0 flex-1">
               <p className="font-medium">{faDate(e.exam_date, true)}</p>
-              <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
+              <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
                 {e.notes ? e.notes : "بدون یادداشت"}
               </p>
             </div>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href={`/examinations/${e.id}`}>مشاهده معاینه</Link>
+            <Button asChild variant="ghost" size="sm" className="shrink-0 self-start sm:self-auto">
+              <Link href={`/examinations/${e.id}`}>مشاهده</Link>
             </Button>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     );
 
   const docsTab = (
@@ -146,27 +146,27 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
         <EmptyState
           icon={FolderOpen}
           title="هنوز مدرکی افزوده نشده است"
-          description="تصاویر و PDFهای مربوط به این بیمار (مثل برگه‌های کاغذی قبلی) را اینجا نگه دارید."
+          description="تصاویر و PDFهای مربوط به این بیمار را اینجا نگه دارید."
         />
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {docs.map((doc) => {
             const isImage = (doc.mime_type ?? "").startsWith("image/");
             return (
-              <li key={doc.id} className="group overflow-hidden rounded-lg border bg-card">
+              <div key={doc.id} className="group overflow-hidden rounded-xl border">
                 <div className="relative flex h-36 items-center justify-center overflow-hidden bg-muted/40">
                   {isImage && doc.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={doc.url}
                       alt={doc.title ?? doc.file_name ?? "مدرک"}
-                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <FileText className="size-10 text-muted-foreground" />
                   )}
                 </div>
-                <div className="space-y-1 p-4">
+                <div className="space-y-1.5 p-4">
                   <p className="truncate text-sm font-medium">{doc.title || doc.file_name}</p>
                   {doc.description ? (
                     <p className="line-clamp-2 text-xs text-muted-foreground">
@@ -179,13 +179,13 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
                   </p>
                   <div className="mt-2 flex items-center gap-1">
                     {doc.url ? (
-                      <Button asChild variant="outline" size="sm">
+                      <Button asChild variant="outline" size="xs">
                         <a href={doc.url} target="_blank" rel="noreferrer">
                           مشاهده
                         </a>
                       </Button>
                     ) : null}
-                    <div className="ms-auto">
+                    <div className="me-auto">
                       <DeleteDocumentButton
                         documentId={doc.id}
                         documentTitle={doc.title ?? doc.file_name ?? "مدرک"}
@@ -193,10 +193,10 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
                     </div>
                   </div>
                 </div>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
       )}
     </div>
   );
@@ -211,17 +211,17 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
       </Button>
 
       {/* header */}
-      <section className="rounded-xl border bg-card p-6 shadow-sm">
+      <section className="rounded-xl border bg-card p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-          <Avatar className="size-20 border-2 shadow-sm">
+          <Avatar className="size-18 border">
             {avatarUrl ? <AvatarImage src={avatarUrl} alt={fullName} /> : null}
-            <AvatarFallback className="bg-primary/10 text-2xl font-bold text-primary">
+            <AvatarFallback className="bg-primary/10 text-xl font-semibold text-primary">
               {patient.first_name.charAt(0)}
             </AvatarFallback>
           </Avatar>
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold md:text-2xl">{fullName}</h1>
+            <h1 className="text-xl font-semibold md:text-2xl">{fullName}</h1>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="secondary" className="gap-1">
                 <IdCard className="size-3.5" />
@@ -248,7 +248,7 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
             <Button asChild variant="outline">
               <Link href={`/patients/${id}/edit`}>
                 <Pencil className="size-4" />
-                ویرایش بیمار
+                ویرایش
               </Link>
             </Button>
           </div>

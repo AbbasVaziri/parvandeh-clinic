@@ -12,10 +12,7 @@ import {
 } from "@/entities/examination/api";
 import { countDocuments } from "@/entities/document/api";
 import { listPatients } from "@/entities/patient/api";
-import {
-  RecentExamsList,
-  RecentPatientsList,
-} from "@/widgets/recent-lists/ui";
+import { RecentExamsList, RecentPatientsList } from "@/widgets/recent-lists/ui";
 
 export const metadata: Metadata = { title: "داشبورد" };
 
@@ -32,17 +29,16 @@ export default async function DashboardPage() {
   const stats = [
     { label: "بیماران", value: patientsCount, icon: Users },
     { label: "معاینه‌ها", value: examsCount, icon: FileText },
-    { label: "مدارک", value: docsCount, icon: FolderOpen },
   ];
 
   return (
     <div className="space-y-8">
-      {/* hero: search + new patient */}
-      <section className="rounded-xl border bg-card p-6 shadow-sm">
+      {/* hero */}
+      <section className="rounded-xl border bg-card p-6">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-lg font-bold md:text-xl">خوش آمدید 👋</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 className="text-lg font-semibold md:text-xl">داشبورد</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
               برای شروع، بیمار را جستجو کنید یا پرونده جدید بسازید.
             </p>
           </div>
@@ -57,20 +53,20 @@ export default async function DashboardPage() {
       </section>
 
       {/* stats */}
-      <section className="grid grid-cols-3 gap-3 md:gap-4">
+      <section className="grid grid-cols-2 gap-4">
         {stats.map((s) => (
           <div
             key={s.label}
-            className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm md:p-5"
+            className="flex items-center gap-4 rounded-xl border bg-card p-5"
           >
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <s.icon className="size-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-xs text-muted-foreground md:text-sm">
+              <p className="truncate text-xs text-muted-foreground">
                 {s.label}
               </p>
-              <p className="text-lg font-bold tabular-nums md:text-2xl">
+              <p className="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl">
                 {toPersianDigits(s.value)}
               </p>
             </div>
@@ -80,17 +76,17 @@ export default async function DashboardPage() {
 
       {/* recent lists */}
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">بیماران اخیر</h2>
+            <h2 className="text-sm font-semibold">بیماران اخیر</h2>
             <Button asChild variant="ghost" size="sm">
               <Link href="/patients">همه بیماران</Link>
             </Button>
           </div>
           <RecentPatientsList patients={recentPatients} />
         </div>
-        <div className="space-y-3">
-          <h2 className="font-semibold">معاینه‌های اخیر</h2>
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold">معاینه‌های اخیر</h2>
           <RecentExamsList exams={recentExams} />
         </div>
       </section>

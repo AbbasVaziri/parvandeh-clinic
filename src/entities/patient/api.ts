@@ -72,6 +72,35 @@ export async function listPatients(limit = 100): Promise<Patient[]> {
   return (data as Patient[] | null) ?? [];
 }
 
+export async function listPatientsPaginated(
+  page: number,
+  pageSize: number,
+  search?: string,
+): Promise<{ patients: Patient[]; total: number }> {
+  const supabase = await createClient();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("patients")
+    .select("*", { count: "exact" })
+    .order("updated_at", { ascending: false });
+
+  if (search && search.length >= 2) {
+    const pattern = `%${sanitizeQuery(search)}%`;
+    query = query.or(
+      `full_name.ilike."${pattern}",national_id.ilike."${pattern}",mobile.ilike."${pattern}"`,
+    );
+  }
+
+  const { data, count } = await query.range(from, to);
+
+  return {
+    patients: (data as Patient[] | null) ?? [],
+    total: count ?? 0,
+  };
+}
+
 export async function countPatients(): Promise<number> {
   const supabase = await createClient();
   const { count } = await supabase

@@ -24,10 +24,10 @@ export function RecentPatientsList({ patients }: { patients: Patient[] }) {
   }
 
   return (
-    <ul className="divide-y overflow-hidden rounded-lg border bg-card">
+    <div className="divide-y overflow-hidden rounded-xl border">
       {patients.map((p) => (
-        <li key={p.id} className="flex items-center gap-3 p-4">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+        <div key={p.id} className="flex items-center gap-3 px-4 py-3.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
             {p.first_name.charAt(0)}
           </div>
           <div className="min-w-0 flex-1">
@@ -44,9 +44,9 @@ export function RecentPatientsList({ patients }: { patients: Patient[] }) {
               پرونده
             </Link>
           </Button>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -62,9 +62,9 @@ export function RecentExamsList({ exams }: { exams: ExaminationWithPatient[] }) 
   }
 
   return (
-    <ul className="divide-y overflow-hidden rounded-lg border bg-card">
+    <div className="divide-y overflow-hidden rounded-xl border">
       {exams.map((e) => (
-        <li key={e.id} className="flex items-center gap-3 p-4">
+        <div key={e.id} className="flex items-center gap-3 px-4 py-3.5">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">
               {e.patient ? `${e.patient.first_name} ${e.patient.last_name}` : "بیمار"}
@@ -75,13 +75,12 @@ export function RecentExamsList({ exams }: { exams: ExaminationWithPatient[] }) 
           </div>
           <Button asChild variant="ghost" size="sm">
             <Link href={`/examinations/${e.id}`}>
-              <Badge variant="secondary" className="pointer-events-none">
-                مشاهده
-              </Badge>
+              <Eye className="size-4" />
+              مشاهده
             </Link>
           </Button>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }

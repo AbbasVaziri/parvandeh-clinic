@@ -15,7 +15,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-card md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-safe-or-2 md:hidden">
       <div className="grid grid-cols-3">
         {ITEMS.map((item) => {
           const active = item.exact
@@ -26,10 +26,15 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px]",
-                active ? "text-primary" : "text-muted-foreground"
+                "relative flex flex-col items-center gap-1 py-2 text-[11px] transition-colors",
+                active
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
+              {active && (
+                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />
+              )}
               <item.icon className="size-5" />
               {item.label}
             </Link>

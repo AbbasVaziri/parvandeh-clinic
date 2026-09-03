@@ -18,6 +18,8 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { faDate } from "@/shared/lib/jalali";
+import { toPersianDigits } from "@/shared/lib/persian";
+import { ExamDataView } from "@/entities/examination/ui/exam-view";
 import { PatientSearch } from "@/features/patient-search/ui/patient-search";
 import { UploadDialog } from "@/features/document-upload/ui/upload-dialog";
 import { DeleteDocumentButton } from "@/features/document-upload/ui/delete-document-button";
@@ -57,7 +59,7 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
   const infoTab = (
     <Card>
       <CardContent className="p-6">
-        <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+        <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 text-right">
           <div>
             <dt className="text-xs text-muted-foreground">نام و نام خانوادگی</dt>
             <dd className="mt-1 font-medium">{fullName}</dd>
@@ -117,23 +119,29 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
         }
       />
     ) : (
-      <div className="divide-y overflow-hidden rounded-xl border">
-        {exams.map((e) => (
-          <div
-            key={e.id}
-            className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="font-medium">{faDate(e.exam_date, true)}</p>
-              <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
-                {e.notes ? e.notes : "بدون یادداشت"}
-              </p>
+      <div className="space-y-6">
+        {exams.map((e, i) => (
+          <div key={e.id} className="rounded-xl border bg-card p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <Badge variant="secondary" className="gap-1.5 shrink-0">
+                <CalendarDays className="size-3.5" />
+                {faDate(e.exam_date, true)}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                معاینه {toPersianDigits(exams.length - i)}
+              </span>
             </div>
-            <Button asChild variant="ghost" size="sm" className="shrink-0 self-start sm:self-auto">
-              <Link href={`/examinations/${e.id}`}>مشاهده</Link>
-            </Button>
+            <ExamDataView data={e.data} notes={e.notes} />
           </div>
         ))}
+        <div className="flex justify-center pt-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/patients/${id}/examinations/new`}>
+              <Plus className="size-4" />
+              ثبت معاینه جدید
+            </Link>
+          </Button>
+        </div>
       </div>
     );
 
@@ -146,7 +154,6 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
         <EmptyState
           icon={FolderOpen}
           title="هنوز مدرکی افزوده نشده است"
-          description="تصاویر و PDFهای مربوط به این بیمار را اینجا نگه دارید."
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

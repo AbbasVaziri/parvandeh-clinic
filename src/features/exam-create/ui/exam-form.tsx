@@ -62,6 +62,8 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
   const [sections, setSections] = useState<ExamCustomSectionData[]>(() =>
     (config.customSections ?? []).map((s) => ({ ...s, cells: {} }))
   );
+  const [diagnosis, setDiagnosis] = useState("");
+  const [plan, setPlan] = useState("");
   const [notes, setNotes] = useState("");
 
   const setCell = (si: number, r: number, c: number, value: string) => {
@@ -122,6 +124,8 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
           axis: parseNumber(refraction.os.axis),
         },
       },
+      diagnosis: diagnosis.trim() || null,
+      plan: plan.trim() || null,
       custom,
     };
 
@@ -197,32 +201,32 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
         </div>
       </div>
 
-      {/* visual acuity */}
+{/* visual acuity */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-4 font-semibold">حدت بینایی (V/A)</h2>
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-lg border" dir="ltr">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-28">چشم</TableHead>
-                <TableHead>SC (بدون عینک)</TableHead>
-                <TableHead>CC (با عینک)</TableHead>
+                <TableHead className="w-28 text-center">چشم</TableHead>
+                <TableHead className="text-center">SC (بدون عینک)</TableHead>
+                <TableHead className="text-center">CC (با عینک)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="bg-muted/40 align-middle font-medium">
+                <TableCell className="bg-muted/40 align-middle font-medium text-center">
                   OD — راست
                 </TableCell>
                 <TableCell className="p-2">
-                  {vaInput(va.od.sc, (v) => setVa((s) => ({ ...s, od: { ...s.od, sc: v } }), ), "مثلاً 6/6")}
+                  {vaInput(va.od.sc, (v) => setVa((s) => ({ ...s, od: { ...s.od, sc: v } })), "مثلاً 6/6")}
                 </TableCell>
                 <TableCell className="p-2">
                   {vaInput(va.od.cc, (v) => setVa((s) => ({ ...s, od: { ...s.od, cc: v } })), "مثلاً 6/6")}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="bg-muted/40 align-middle font-medium">
+                <TableCell className="bg-muted/40 align-middle font-medium text-center">
                   OS — چپ
                 </TableCell>
                 <TableCell className="p-2">
@@ -240,19 +244,19 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
       {/* refraction */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-4 font-semibold">رفرکشن / قدر عینک</h2>
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-lg border" dir="ltr">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-28">چشم</TableHead>
-                <TableHead>SPH</TableHead>
-                <TableHead>CYL</TableHead>
-                <TableHead>AXIS</TableHead>
+                <TableHead className="w-28 text-center">چشم</TableHead>
+                <TableHead className="text-center">SPH</TableHead>
+                <TableHead className="text-center">CYL</TableHead>
+                <TableHead className="text-center">AXIS</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="bg-muted/40 align-middle font-medium">
+                <TableCell className="bg-muted/40 align-middle font-medium text-center">
                   OD — راست
                 </TableCell>
                 <TableCell className="p-2">
@@ -266,7 +270,7 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="bg-muted/40 align-middle font-medium">
+                <TableCell className="bg-muted/40 align-middle font-medium text-center">
                   OS — چپ
                 </TableCell>
                 <TableCell className="p-2">
@@ -284,11 +288,39 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
         </div>
       </div>
 
+      {/* diagnosis */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="space-y-2">
+          <Label htmlFor="exam_diagnosis">تشخیص</Label>
+          <Textarea
+            id="exam_diagnosis"
+            rows={4}
+            placeholder="تشخیص پزشک…"
+            value={diagnosis}
+            onChange={(e) => setDiagnosis(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* plan */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="space-y-2">
+          <Label htmlFor="exam_plan">پلن</Label>
+          <Textarea
+            id="exam_plan"
+            rows={4}
+            placeholder="طرح درمان / پلن…"
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* configurable custom sections */}
       {sections.map((section, si) => (
         <div key={section.id} className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className="mb-4 font-semibold">{section.label}</h2>
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-lg border" dir="ltr">
             <Table>
               <TableHeader>
                 <TableRow>

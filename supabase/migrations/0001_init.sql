@@ -113,8 +113,8 @@ insert into public.settings (key, value) values
     '{"customSections": [{
         "id": "extra",
         "label": "جدول تکمیلی (قابل تنظیم)",
-        "rows": ["ردیف ۱", "ردیف ۲"],
-        "columns": ["ستون ۱", "ستون ۲", "ستون ۳"]
+        "rows": ["ردیف ۱", "ردیف ۲", "ردیف ۳"],
+        "columns": ["ستون ۱", "ستون ۲", "ستون ۳", "ستون ۴"]
       }]}'::jsonb
   )
 on conflict (key) do nothing;

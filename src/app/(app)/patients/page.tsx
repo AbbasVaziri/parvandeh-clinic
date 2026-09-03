@@ -90,26 +90,26 @@ export default async function PatientsPage({ searchParams }: PageProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>نام و نام خانوادگی</TableHead>
-                  <TableHead>کد ملی</TableHead>
-                  <TableHead className="hidden md:table-cell">موبایل</TableHead>
-                  <TableHead className="hidden md:table-cell">آخرین معاینه</TableHead>
-                  <TableHead className="w-24 text-end"> </TableHead>
+                  <TableHead className="text-center">نام و نام خانوادگی</TableHead>
+                  <TableHead className="text-center">کد ملی</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">موبایل</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">آخرین معاینه</TableHead>
+                  <TableHead className="w-24 text-center"> </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {patients.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-center">
                       {p.first_name} {p.last_name}
                     </TableCell>
-                    <TableCell dir="ltr" className="text-start">
+                    <TableCell dir="ltr" className="text-center">
                       {p.national_id}
                     </TableCell>
-                    <TableCell dir="ltr" className="hidden text-start md:table-cell">
+                    <TableCell dir="ltr" className="hidden text-center md:table-cell">
                       {p.mobile}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell text-center">
                       {lastExams.get(p.id) ? faDate(lastExams.get(p.id)) : "—"}
                     </TableCell>
                     <TableCell className="text-end">

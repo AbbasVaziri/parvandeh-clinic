@@ -88,6 +88,8 @@ export const examFormSchema = z.object({
       ),
     }),
   }),
+  diagnosis: optionalText(5000),
+  plan: optionalText(5000),
   notes: optionalText(5000),
 });
 

@@ -20,6 +20,8 @@ export interface ExamCustomSectionData {
 export interface ExamData {
   va: { od: ExamVa; os: ExamVa };
   refraction: { od: ExamRefraction; os: ExamRefraction };
+  diagnosis: string | null;
+  plan: string | null;
   custom: ExamCustomSectionData[];
 }
 
@@ -48,6 +50,8 @@ export function emptyExamData(custom: ExamCustomSectionData[] = []): ExamData {
       od: { sph: null, cyl: null, axis: null },
       os: { sph: null, cyl: null, axis: null },
     },
+    diagnosis: null,
+    plan: null,
     custom,
   };
 }

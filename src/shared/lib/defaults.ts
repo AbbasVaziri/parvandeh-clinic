@@ -7,8 +7,8 @@ export const DEFAULT_EXAM_CONFIG: ExamFormSettings = {
     {
       id: "extra",
       label: "جدول تکمیلی (قابل تنظیم)",
-      rows: ["ردیف ۱", "ردیف ۲"],
-      columns: ["ستون ۱", "ستون ۲", "ستون ۳"],
+      rows: ["ردیف ۱", "ردیف ۲", "ردیف ۳"],
+      columns: ["ستون ۱", "ستون ۲", "ستون ۳", "ستون ۴"],
     },
   ],
 };

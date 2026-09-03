@@ -70,7 +70,25 @@ export const examFormSchema = z.object({
     od: z.object({ sc: optionalShortText, cc: optionalShortText }),
     os: z.object({ sc: optionalShortText, cc: optionalShortText }),
   }),
-  refraction: z.object({
+  refractionDry: z.object({
+    od: z.object({
+      sph: optionalNumber("SPH"),
+      cyl: optionalNumber("CYL"),
+      axis: optionalNumber("AXIS").refine(
+        (v) => v == null || (v >= 0 && v <= 180),
+        "محور (AXIS) باید بین ۰ تا ۱۸۰ باشد"
+      ),
+    }),
+    os: z.object({
+      sph: optionalNumber("SPH"),
+      cyl: optionalNumber("CYL"),
+      axis: optionalNumber("AXIS").refine(
+        (v) => v == null || (v >= 0 && v <= 180),
+        "محور (AXIS) باید بین ۰ تا ۱۸۰ باشد"
+      ),
+    }),
+  }),
+  refractionCyclo: z.object({
     od: z.object({
       sph: optionalNumber("SPH"),
       cyl: optionalNumber("CYL"),

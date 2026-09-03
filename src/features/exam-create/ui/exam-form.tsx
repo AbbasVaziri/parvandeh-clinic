@@ -54,13 +54,20 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
 
   const [examDate, setExamDate] = useState<DateObject | null>(today);
   const [examTime, setExamTime] = useState("");
-  const [va, setVa] = useState<{ od: VaEye; os: VaEye }>({ od: emptyVa, os: emptyVa });
-  const [refraction, setRefraction] = useState<{ od: RefEye; os: RefEye }>({
+  const [va, setVa] = useState<{ od: VaEye; os: VaEye }>({
+    od: emptyVa,
+    os: emptyVa,
+  });
+  const [refractionDry, setRefractionDry] = useState<{ od: RefEye; os: RefEye }>({
+    od: emptyRef,
+    os: emptyRef,
+  });
+  const [refractionCyclo, setRefractionCyclo] = useState<{ od: RefEye; os: RefEye }>({
     od: emptyRef,
     os: emptyRef,
   });
   const [sections, setSections] = useState<ExamCustomSectionData[]>(() =>
-    (config.customSections ?? []).map((s) => ({ ...s, cells: {} }))
+    (config.customSections ?? []).map((s) => ({ ...s, cells: {} })),
   );
   const [diagnosis, setDiagnosis] = useState("");
   const [plan, setPlan] = useState("");
@@ -69,8 +76,8 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
   const setCell = (si: number, r: number, c: number, value: string) => {
     setSections((prev) =>
       prev.map((s, i) =>
-        i === si ? { ...s, cells: { ...s.cells, [`${r}:${c}`]: value } } : s
-      )
+        i === si ? { ...s, cells: { ...s.cells, [`${r}:${c}`]: value } } : s,
+      ),
     );
   };
 
@@ -92,7 +99,10 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
       return;
     }
 
-    for (const eye of [refraction.od, refraction.os]) {
+    for (const eye of [
+      refractionDry.od, refractionDry.os,
+      refractionCyclo.od, refractionCyclo.os,
+    ]) {
       const axis = parseNumber(eye.axis);
       if (axis !== null && (axis < 0 || axis > 180)) {
         toast.error("محور (AXIS) باید بین ۰ تا ۱۸۰ باشد.");
@@ -103,7 +113,7 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
     const custom: ExamCustomSectionData[] = sections.map((s) => ({
       ...s,
       cells: Object.fromEntries(
-        Object.entries(s.cells).map(([k, v]) => [k, v?.trim() || null])
+        Object.entries(s.cells).map(([k, v]) => [k, v?.trim() || null]),
       ),
     }));
 
@@ -112,16 +122,28 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
         od: { sc: va.od.sc.trim() || null, cc: va.od.cc.trim() || null },
         os: { sc: va.os.sc.trim() || null, cc: va.os.cc.trim() || null },
       },
-      refraction: {
+      refractionDry: {
         od: {
-          sph: parseNumber(refraction.od.sph),
-          cyl: parseNumber(refraction.od.cyl),
-          axis: parseNumber(refraction.od.axis),
+          sph: parseNumber(refractionDry.od.sph),
+          cyl: parseNumber(refractionDry.od.cyl),
+          axis: parseNumber(refractionDry.od.axis),
         },
         os: {
-          sph: parseNumber(refraction.os.sph),
-          cyl: parseNumber(refraction.os.cyl),
-          axis: parseNumber(refraction.os.axis),
+          sph: parseNumber(refractionDry.os.sph),
+          cyl: parseNumber(refractionDry.os.cyl),
+          axis: parseNumber(refractionDry.os.axis),
+        },
+      },
+      refractionCyclo: {
+        od: {
+          sph: parseNumber(refractionCyclo.od.sph),
+          cyl: parseNumber(refractionCyclo.od.cyl),
+          axis: parseNumber(refractionCyclo.od.axis),
+        },
+        os: {
+          sph: parseNumber(refractionCyclo.os.sph),
+          cyl: parseNumber(refractionCyclo.os.cyl),
+          axis: parseNumber(refractionCyclo.os.axis),
         },
       },
       diagnosis: diagnosis.trim() || null,
@@ -154,7 +176,11 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
     }
   }
 
-  const numInput = (value: string, onChange: (v: string) => void, placeholder: string) => (
+  const numInput = (
+    value: string,
+    onChange: (v: string) => void,
+    placeholder: string,
+  ) => (
     <Input
       dir="ltr"
       inputMode="decimal"
@@ -165,7 +191,11 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
     />
   );
 
-  const vaInput = (value: string, onChange: (v: string) => void, placeholder: string) => (
+  const vaInput = (
+    value: string,
+    onChange: (v: string) => void,
+    placeholder: string,
+  ) => (
     <Input
       placeholder={placeholder}
       value={value}
@@ -201,7 +231,7 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
         </div>
       </div>
 
-{/* visual acuity */}
+      {/* visual acuity */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="mb-4 font-semibold">حدت بینایی (V/A)</h2>
         <div className="overflow-hidden rounded-lg border" dir="ltr">
@@ -219,10 +249,18 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
                   OD — راست
                 </TableCell>
                 <TableCell className="p-2">
-                  {vaInput(va.od.sc, (v) => setVa((s) => ({ ...s, od: { ...s.od, sc: v } })), "مثلاً 6/6")}
+                  {vaInput(
+                    va.od.sc,
+                    (v) => setVa((s) => ({ ...s, od: { ...s.od, sc: v } })),
+                    "مثلاً 6/6",
+                  )}
                 </TableCell>
                 <TableCell className="p-2">
-                  {vaInput(va.od.cc, (v) => setVa((s) => ({ ...s, od: { ...s.od, cc: v } })), "مثلاً 6/6")}
+                  {vaInput(
+                    va.od.cc,
+                    (v) => setVa((s) => ({ ...s, od: { ...s.od, cc: v } })),
+                    "مثلاً 6/6",
+                  )}
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -230,10 +268,18 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
                   OS — چپ
                 </TableCell>
                 <TableCell className="p-2">
-                  {vaInput(va.os.sc, (v) => setVa((s) => ({ ...s, os: { ...s.os, sc: v } })), "مثلاً 6/6")}
+                  {vaInput(
+                    va.os.sc,
+                    (v) => setVa((s) => ({ ...s, os: { ...s.os, sc: v } })),
+                    "مثلاً 6/6",
+                  )}
                 </TableCell>
                 <TableCell className="p-2">
-                  {vaInput(va.os.cc, (v) => setVa((s) => ({ ...s, os: { ...s.os, cc: v } })), "مثلاً 6/6")}
+                  {vaInput(
+                    va.os.cc,
+                    (v) => setVa((s) => ({ ...s, os: { ...s.os, cc: v } })),
+                    "مثلاً 6/6",
+                  )}
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -241,9 +287,9 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
         </div>
       </div>
 
-      {/* refraction */}
+      {/* refraction dry */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <h2 className="mb-4 font-semibold">رفرکشن / قدر عینک</h2>
+        <h2 className="mb-4 font-semibold">رفرکشن Dry</h2>
         <div className="overflow-hidden rounded-lg border" dir="ltr">
           <Table>
             <TableHeader>
@@ -260,13 +306,31 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
                   OD — راست
                 </TableCell>
                 <TableCell className="p-2">
-                  {numInput(refraction.od.sph, (v) => setRefraction((s) => ({ ...s, od: { ...s.od, sph: v } })), "-1.25")}
+                  {numInput(
+                    refractionDry.od.sph,
+                    (v) =>
+                      setRefractionDry((s) => ({ ...s, od: { ...s.od, sph: v } })),
+                    "-1.25",
+                  )}
                 </TableCell>
                 <TableCell className="p-2">
-                  {numInput(refraction.od.cyl, (v) => setRefraction((s) => ({ ...s, od: { ...s.od, cyl: v } })), "-0.50")}
+                  {numInput(
+                    refractionDry.od.cyl,
+                    (v) =>
+                      setRefractionDry((s) => ({ ...s, od: { ...s.od, cyl: v } })),
+                    "-0.50",
+                  )}
                 </TableCell>
                 <TableCell className="p-2">
-                  {numInput(refraction.od.axis, (v) => setRefraction((s) => ({ ...s, od: { ...s.od, axis: v } })), "90")}
+                  {numInput(
+                    refractionDry.od.axis,
+                    (v) =>
+                      setRefractionDry((s) => ({
+                        ...s,
+                        od: { ...s.od, axis: v },
+                      })),
+                    "90",
+                  )}
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -274,13 +338,31 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
                   OS — چپ
                 </TableCell>
                 <TableCell className="p-2">
-                  {numInput(refraction.os.sph, (v) => setRefraction((s) => ({ ...s, os: { ...s.os, sph: v } })), "-1.25")}
+                  {numInput(
+                    refractionDry.os.sph,
+                    (v) =>
+                      setRefractionDry((s) => ({ ...s, os: { ...s.os, sph: v } })),
+                    "-1.25",
+                  )}
                 </TableCell>
                 <TableCell className="p-2">
-                  {numInput(refraction.os.cyl, (v) => setRefraction((s) => ({ ...s, os: { ...s.os, cyl: v } })), "-0.50")}
+                  {numInput(
+                    refractionDry.os.cyl,
+                    (v) =>
+                      setRefractionDry((s) => ({ ...s, os: { ...s.os, cyl: v } })),
+                    "-0.50",
+                  )}
                 </TableCell>
                 <TableCell className="p-2">
-                  {numInput(refraction.os.axis, (v) => setRefraction((s) => ({ ...s, os: { ...s.os, axis: v } })), "90")}
+                  {numInput(
+                    refractionDry.os.axis,
+                    (v) =>
+                      setRefractionDry((s) => ({
+                        ...s,
+                        os: { ...s.os, axis: v },
+                      })),
+                    "90",
+                  )}
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -288,37 +370,95 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
         </div>
       </div>
 
-      {/* diagnosis */}
+      {/* refraction cyclo */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <div className="space-y-2">
-          <Label htmlFor="exam_diagnosis">تشخیص</Label>
-          <Textarea
-            id="exam_diagnosis"
-            rows={4}
-            placeholder="تشخیص پزشک…"
-            value={diagnosis}
-            onChange={(e) => setDiagnosis(e.target.value)}
-          />
+        <h2 className="mb-4 font-semibold">رفرکشن Cyclo</h2>
+        <div className="overflow-hidden rounded-lg border" dir="ltr">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-28 text-center">چشم</TableHead>
+                <TableHead className="text-center">SPH</TableHead>
+                <TableHead className="text-center">CYL</TableHead>
+                <TableHead className="text-center">AXIS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="bg-muted/40 align-middle font-medium text-center">
+                  OD — راست
+                </TableCell>
+                <TableCell className="p-2">
+                  {numInput(
+                    refractionCyclo.od.sph,
+                    (v) =>
+                      setRefractionCyclo((s) => ({ ...s, od: { ...s.od, sph: v } })),
+                    "-1.25",
+                  )}
+                </TableCell>
+                <TableCell className="p-2">
+                  {numInput(
+                    refractionCyclo.od.cyl,
+                    (v) =>
+                      setRefractionCyclo((s) => ({ ...s, od: { ...s.od, cyl: v } })),
+                    "-0.50",
+                  )}
+                </TableCell>
+                <TableCell className="p-2">
+                  {numInput(
+                    refractionCyclo.od.axis,
+                    (v) =>
+                      setRefractionCyclo((s) => ({
+                        ...s,
+                        od: { ...s.od, axis: v },
+                      })),
+                    "90",
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="bg-muted/40 align-middle font-medium text-center">
+                  OS — چپ
+                </TableCell>
+                <TableCell className="p-2">
+                  {numInput(
+                    refractionCyclo.os.sph,
+                    (v) =>
+                      setRefractionCyclo((s) => ({ ...s, os: { ...s.os, sph: v } })),
+                    "-1.25",
+                  )}
+                </TableCell>
+                <TableCell className="p-2">
+                  {numInput(
+                    refractionCyclo.os.cyl,
+                    (v) =>
+                      setRefractionCyclo((s) => ({ ...s, os: { ...s.os, cyl: v } })),
+                    "-0.50",
+                  )}
+                </TableCell>
+                <TableCell className="p-2">
+                  {numInput(
+                    refractionCyclo.os.axis,
+                    (v) =>
+                      setRefractionCyclo((s) => ({
+                        ...s,
+                        os: { ...s.os, axis: v },
+                      })),
+                    "90",
+                  )}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
       </div>
-
-      {/* plan */}
-      <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <div className="space-y-2">
-          <Label htmlFor="exam_plan">پلن</Label>
-          <Textarea
-            id="exam_plan"
-            rows={4}
-            placeholder="طرح درمان / پلن…"
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-          />
-        </div>
-      </div>
-
+      
       {/* configurable custom sections */}
       {sections.map((section, si) => (
-        <div key={section.id} className="rounded-xl border bg-card p-5 shadow-sm">
+        <div
+          key={section.id}
+          className="rounded-xl border bg-card p-5 shadow-sm"
+        >
           <h2 className="mb-4 font-semibold">{section.label}</h2>
           <div className="overflow-x-auto rounded-lg border" dir="ltr">
             <Table>
@@ -365,6 +505,34 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
             placeholder="یادداشت آزاد معاینه…"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* diagnosis */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="space-y-2">
+          <Label htmlFor="exam_diagnosis">تشخیص</Label>
+          <Textarea
+            id="exam_diagnosis"
+            rows={4}
+            placeholder="تشخیص پزشک…"
+            value={diagnosis}
+            onChange={(e) => setDiagnosis(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* plan */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="space-y-2">
+          <Label htmlFor="exam_plan">پلن</Label>
+          <Textarea
+            id="exam_plan"
+            rows={4}
+            placeholder="طرح درمان / پلن…"
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
           />
         </div>
       </div>

@@ -50,7 +50,7 @@ export function ExamDataView({ data, notes }: { data: ExamData; notes?: string |
       </section>
 
       <section>
-        <SectionTitle>رفرکشن / قدر عینک</SectionTitle>
+        <SectionTitle>رفرکشن Dry</SectionTitle>
         <div className="overflow-hidden rounded-lg border" dir="ltr">
           <Table>
             <TableHeader>
@@ -64,15 +64,45 @@ export function ExamDataView({ data, notes }: { data: ExamData; notes?: string |
             <TableBody>
               <TableRow>
                 <TableCell className="font-medium text-center">راست (OD)</TableCell>
-                <TableCell dir="ltr" className="text-center">{dash(data.refraction?.od?.sph)}</TableCell>
-                <TableCell dir="ltr" className="text-center">{dash(data.refraction?.od?.cyl)}</TableCell>
-                <TableCell dir="ltr" className="text-center">{dash(data.refraction?.od?.axis)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionDry?.od?.sph)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionDry?.od?.cyl)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionDry?.od?.axis)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-medium text-center">چپ (OS)</TableCell>
-                <TableCell dir="ltr" className="text-center">{dash(data.refraction?.os?.sph)}</TableCell>
-                <TableCell dir="ltr" className="text-center">{dash(data.refraction?.os?.cyl)}</TableCell>
-                <TableCell dir="ltr" className="text-center">{dash(data.refraction?.os?.axis)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionDry?.os?.sph)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionDry?.os?.cyl)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionDry?.os?.axis)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </section>
+
+      <section>
+        <SectionTitle>رفرکشن Cyclo</SectionTitle>
+        <div className="overflow-hidden rounded-lg border" dir="ltr">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-32 text-center">چشم</TableHead>
+                <TableHead className="text-center">SPH</TableHead>
+                <TableHead className="text-center">CYL</TableHead>
+                <TableHead className="text-center">AXIS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium text-center">راست (OD)</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionCyclo?.od?.sph)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionCyclo?.od?.cyl)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionCyclo?.od?.axis)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium text-center">چپ (OS)</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionCyclo?.os?.sph)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionCyclo?.os?.cyl)}</TableCell>
+                <TableCell dir="ltr" className="text-center">{dash(data.refractionCyclo?.os?.axis)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

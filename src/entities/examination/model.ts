@@ -19,7 +19,8 @@ export interface ExamCustomSectionData {
 
 export interface ExamData {
   va: { od: ExamVa; os: ExamVa };
-  refraction: { od: ExamRefraction; os: ExamRefraction };
+  refractionDry: { od: ExamRefraction; os: ExamRefraction };
+  refractionCyclo: { od: ExamRefraction; os: ExamRefraction };
   diagnosis: string | null;
   plan: string | null;
   custom: ExamCustomSectionData[];
@@ -41,15 +42,14 @@ export interface ExaminationWithPatient extends Examination {
 }
 
 export function emptyExamData(custom: ExamCustomSectionData[] = []): ExamData {
+  const refEye = { sph: null, cyl: null, axis: null };
   return {
     va: {
       od: { sc: null, cc: null },
       os: { sc: null, cc: null },
     },
-    refraction: {
-      od: { sph: null, cyl: null, axis: null },
-      os: { sph: null, cyl: null, axis: null },
-    },
+    refractionDry: { od: { ...refEye }, os: { ...refEye } },
+    refractionCyclo: { od: { ...refEye }, os: { ...refEye } },
     diagnosis: null,
     plan: null,
     custom,

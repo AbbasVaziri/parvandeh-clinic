@@ -35,6 +35,25 @@ export async function createExamination(
   return { id: data.id };
 }
 
+export async function updateExamination(
+  id: string,
+  input: CreateExaminationInput
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("examinations")
+    .update({
+      exam_date: input.exam_date,
+      data: input.data,
+      notes: input.notes,
+    })
+    .eq("id", id);
+
+  if (error) return { error: faDbError(error) };
+  return {};
+}
+
 export async function getExaminationById(id: string): Promise<Examination | null> {
   const supabase = await createClient();
   const { data } = await supabase

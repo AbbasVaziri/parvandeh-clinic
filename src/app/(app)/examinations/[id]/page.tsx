@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, ChevronRight, Glasses } from "lucide-react";
+import { CalendarDays, ChevronRight, Glasses, Pencil } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { ExamDataView } from "@/entities/examination/ui/exam-view";
@@ -43,12 +43,20 @@ export default async function ExaminationPage({ params }: PageProps) {
             {faDate(exam.exam_date, true)}
           </Badge>
         </div>
-        <Button asChild variant="outline">
-          <Link href={`/patients/${exam.patient_id}/examinations/new`}>
-            <Glasses className="size-4" />
-            معاینه جدید برای این بیمار
-          </Link>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild>
+            <Link href={`/patients/${exam.patient_id}/examinations/${exam.id}/edit`}>
+              <Pencil className="size-4" />
+              ویرایش معاینه
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/patients/${exam.patient_id}/examinations/new`}>
+              <Glasses className="size-4" />
+              معاینه جدید برای این بیمار
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">

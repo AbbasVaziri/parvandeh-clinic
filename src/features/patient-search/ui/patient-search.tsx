@@ -104,7 +104,7 @@ export function PatientSearch({ variant = "compact" }: PatientSearchProps) {
                 </p>
                 <p className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                   <span>
-                    کد ملی: <span dir="ltr">{p.national_id}</span>
+                    کد ملی: <span dir="ltr">{p.national_id ?? "—"}</span>
                   </span>
                   <span>
                     موبایل: <span dir="ltr">{p.mobile}</span>

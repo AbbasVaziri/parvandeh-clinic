@@ -4,7 +4,7 @@
  * If you don't have DATABASE_URL, paste the SQL file into Supabase → SQL Editor.
  */
 import pg from "pg";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 try {
   for (const line of readFileSync(".env.local", "utf8").split("\n")) {
@@ -19,18 +19,26 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   console.error(
     "DATABASE_URL is not set. Either add it to .env.local or run the SQL manually:\n" +
-      "  Supabase Dashboard → SQL Editor → paste supabase/migrations/0001_init.sql → Run"
+      "  Supabase Dashboard → SQL Editor → paste every file in supabase/migrations/ in order → Run"
   );
   process.exit(1);
 }
 
-const sql = readFileSync("supabase/migrations/0001_init.sql", "utf8");
 const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
+
+// All migrations are idempotent, so run every file in filename order.
+const files = readdirSync("supabase/migrations")
+  .filter((f) => f.endsWith(".sql"))
+  .sort();
 
 try {
   await client.connect();
-  await client.query(sql);
-  console.log("✓ Migration applied successfully.");
+  for (const file of files) {
+    const sql = readFileSync(`supabase/migrations/${file}`, "utf8");
+    await client.query(sql);
+    console.log(`✓ ${file}`);
+  }
+  console.log("✓ Migrations applied successfully.");
 } catch (err) {
   console.error("✕ Migration failed:", err.message);
   process.exitCode = 1;

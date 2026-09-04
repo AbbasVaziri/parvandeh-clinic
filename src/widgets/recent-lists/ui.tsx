@@ -35,7 +35,7 @@ export function RecentPatientsList({ patients }: { patients: Patient[] }) {
               {p.first_name} {p.last_name}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              کد ملی: <span dir="ltr">{p.national_id}</span>
+              کد ملی: <span dir="ltr">{p.national_id ?? "—"}</span>
             </p>
           </div>
           <Button asChild variant="ghost" size="sm">

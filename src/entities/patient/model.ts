@@ -3,7 +3,7 @@ export interface Patient {
   first_name: string;
   last_name: string;
   full_name?: string | null;
-  national_id: string;
+  national_id: string | null;
   mobile: string;
   birth_date: string | null;
   address: string | null;
@@ -17,7 +17,7 @@ export interface PatientSearchResult {
   id: string;
   first_name: string;
   last_name: string;
-  national_id: string;
+  national_id: string | null;
   mobile: string;
   avatar_path: string | null;
   last_exam_date: string | null;

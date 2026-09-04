@@ -45,7 +45,7 @@ create table if not exists public.patients (
   id uuid primary key default gen_random_uuid(),
   first_name text not null,
   last_name text not null,
-  national_id varchar(10) not null unique,
+  national_id varchar(10) unique,
   mobile varchar(15) not null,
   birth_date date,
   address text,

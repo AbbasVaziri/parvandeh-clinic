@@ -21,10 +21,12 @@ export const patientSchema = z.object({
   first_name: requiredText("نام", 50),
   last_name: requiredText("نام خانوادگی", 50),
   national_id: z
-    .string({ required_error: "کد ملی الزامی است" })
-    .transform((v) => toEnglishDigits(v).replace(/\D/g, ""))
-    .refine((v) => v.length === 10, "کد ملی باید ۱۰ رقم باشد")
-    .refine((v) => isValidNationalId(v), "کد ملی وارد شده معتبر نیست"),
+    .string()
+    .optional()
+    .transform((v) => (v ? toEnglishDigits(v).replace(/\D/g, "") : ""))
+    .refine((v) => v === "" || v.length === 10, "کد ملی باید ۱۰ رقم باشد")
+    .refine((v) => v === "" || isValidNationalId(v), "کد ملی وارد شده معتبر نیست")
+    .transform((v) => (v === "" ? null : v)),
   mobile: z
     .string({ required_error: "شماره موبایل الزامی است" })
     .transform((v) => normalizeMobile(v))
@@ -62,10 +64,6 @@ const optionalShortText = z
 
 export const examFormSchema = z.object({
   exam_date: z.string().min(1, "تاریخ معاینه الزامی است"),
-  exam_time: z
-    .string()
-    .optional()
-    .refine((v) => !v || /^\d{1,2}:\d{2}$/.test(v), "ساعت را به شکل HH:mm وارد کنید"),
   va: z.object({
     od: z.object({ sc: optionalShortText, cc: optionalShortText }),
     os: z.object({ sc: optionalShortText, cc: optionalShortText }),

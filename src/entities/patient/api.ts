@@ -110,9 +110,10 @@ export async function countPatients(): Promise<number> {
 }
 
 export async function nationalIdExists(
-  nationalId: string,
+  nationalId: string | null,
   excludeId?: string
 ): Promise<boolean> {
+  if (!nationalId) return false;
   const supabase = await createClient();
   let query = supabase
     .from("patients")

@@ -21,8 +21,8 @@ DATABASE_URL=postgresql://...           # اختیاری — برای اجرای
   npm run db:migrate
   ```
 
-- **دستی:** در داشبورد Supabase → **SQL Editor** → کل فایل
-  `supabase/migrations/0001_init.sql` را paste کنید و Run بزنید.
+- **دستی:** در داشبورد Supabase → **SQL Editor** → همه فایل‌های
+  `supabase/migrations/` را به ترتیب (0001، 0002 و…) paste کنید و Run بزنید.
 
 این migration شامل: جداول `patients`, `examinations`, `documents`, `profiles`, `settings`، ایندکس‌های جستجو، RLS و باکت خصوصی `patient-documents` است.
 

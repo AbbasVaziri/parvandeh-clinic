@@ -67,7 +67,7 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
           <div>
             <dt className="text-xs text-muted-foreground">کد ملی</dt>
             <dd className="mt-1 font-medium" dir="ltr">
-              {patient.national_id}
+              {patient.national_id ?? "—"}
             </dd>
           </div>
           <div>
@@ -130,6 +130,12 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
               <span className="text-xs text-muted-foreground">
                 معاینه {toPersianDigits(exams.length - i)}
               </span>
+              <Button asChild variant="outline" size="xs" className="ms-auto shrink-0">
+                <Link href={`/patients/${id}/examinations/${e.id}/edit`}>
+                  <Pencil className="size-3.5" />
+                  ویرایش
+                </Link>
+              </Button>
             </div>
             <ExamDataView data={e.data} notes={e.notes} />
           </div>
@@ -232,7 +238,7 @@ export default async function PatientProfilePage({ params, searchParams }: PageP
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="secondary" className="gap-1">
                 <IdCard className="size-3.5" />
-                <span dir="ltr">{patient.national_id}</span>
+                <span dir="ltr">{patient.national_id ?? "—"}</span>
               </Badge>
               <Badge variant="secondary" className="gap-1">
                 <Phone className="size-3.5" />

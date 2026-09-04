@@ -130,7 +130,7 @@ export function PatientForm({ mode, patient, avatarUrl }: PatientFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="national_id">کد ملی *</Label>
+            <Label htmlFor="national_id">کد ملی (اختیاری)</Label>
             <Input
               id="national_id"
               dir="ltr"

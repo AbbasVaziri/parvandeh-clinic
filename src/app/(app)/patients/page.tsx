@@ -104,7 +104,7 @@ export default async function PatientsPage({ searchParams }: PageProps) {
                       {p.first_name} {p.last_name}
                     </TableCell>
                     <TableCell dir="ltr" className="text-center">
-                      {p.national_id}
+                      {p.national_id ?? "—"}
                     </TableCell>
                     <TableCell dir="ltr" className="hidden text-center md:table-cell">
                       {p.mobile}

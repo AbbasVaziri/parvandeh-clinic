@@ -18,27 +18,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-import { PersianDatePicker } from "@/shared/ui/persian-date-picker";
+import { PersianDatePicker, isoToDateObject } from "@/shared/ui/persian-date-picker";
 import { toEnglishDigits } from "@/shared/lib/persian";
 import type { ExamFormSettings } from "@/shared/lib/types";
 import {
-  emptyExamData,
   type ExamCustomSectionData,
   type ExamData,
 } from "@/entities/examination/model";
-import { createExamination } from "../api";
+import { createExamination, updateExamination } from "../api";
 
 interface ExamFormProps {
   patientId: string;
   patientName: string;
   config: ExamFormSettings;
+  mode?: "create" | "edit";
+  examId?: string;
+  initialData?: ExamData | null;
+  initialDate?: string | null;
+  initialNotes?: string | null;
 }
 
 type VaEye = { sc: string; cc: string };
 type RefEye = { sph: string; cyl: string; axis: string };
 
-const emptyVa: VaEye = { sc: "", cc: "" };
-const emptyRef: RefEye = { sph: "", cyl: "", axis: "" };
+const num = (v: number | null | undefined) => (v == null ? "" : String(v));
+const str = (v: string | null | undefined) => v ?? "";
 
 function parseNumber(raw: string): number | null {
   const v = raw.trim();
@@ -47,31 +51,65 @@ function parseNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
+export function ExamForm({
+  patientId,
+  config,
+  mode = "create",
+  examId,
+  initialData = null,
+  initialDate = null,
+  initialNotes = null,
+}: ExamFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [today] = useState(() => new DateObject());
 
-  const [examDate, setExamDate] = useState<DateObject | null>(today);
-  const [examTime, setExamTime] = useState("");
+  const [examDate, setExamDate] = useState<DateObject | null>(() =>
+    initialDate ? isoToDateObject(initialDate) : today,
+  );
   const [va, setVa] = useState<{ od: VaEye; os: VaEye }>({
-    od: emptyVa,
-    os: emptyVa,
+    od: { sc: str(initialData?.va?.od?.sc), cc: str(initialData?.va?.od?.cc) },
+    os: { sc: str(initialData?.va?.os?.sc), cc: str(initialData?.va?.os?.cc) },
   });
   const [refractionDry, setRefractionDry] = useState<{ od: RefEye; os: RefEye }>({
-    od: emptyRef,
-    os: emptyRef,
+    od: {
+      sph: num(initialData?.refractionDry?.od?.sph),
+      cyl: num(initialData?.refractionDry?.od?.cyl),
+      axis: num(initialData?.refractionDry?.od?.axis),
+    },
+    os: {
+      sph: num(initialData?.refractionDry?.os?.sph),
+      cyl: num(initialData?.refractionDry?.os?.cyl),
+      axis: num(initialData?.refractionDry?.os?.axis),
+    },
   });
   const [refractionCyclo, setRefractionCyclo] = useState<{ od: RefEye; os: RefEye }>({
-    od: emptyRef,
-    os: emptyRef,
+    od: {
+      sph: num(initialData?.refractionCyclo?.od?.sph),
+      cyl: num(initialData?.refractionCyclo?.od?.cyl),
+      axis: num(initialData?.refractionCyclo?.od?.axis),
+    },
+    os: {
+      sph: num(initialData?.refractionCyclo?.os?.sph),
+      cyl: num(initialData?.refractionCyclo?.os?.cyl),
+      axis: num(initialData?.refractionCyclo?.os?.axis),
+    },
   });
-  const [sections, setSections] = useState<ExamCustomSectionData[]>(() =>
-    (config.customSections ?? []).map((s) => ({ ...s, cells: {} })),
-  );
-  const [diagnosis, setDiagnosis] = useState("");
-  const [plan, setPlan] = useState("");
-  const [notes, setNotes] = useState("");
+  const [sections, setSections] = useState<ExamCustomSectionData[]>(() => {
+    const saved = initialData?.custom;
+    if (saved && saved.length > 0) {
+      return saved.map((s) => ({
+        ...s,
+        cells: Object.fromEntries(
+          Object.entries(s.cells ?? {}).map(([k, v]) => [k, v ?? ""]),
+        ),
+      }));
+    }
+    return (config.customSections ?? []).map((s) => ({ ...s, cells: {} }));
+  });
+  const [diagnosis, setDiagnosis] = useState(str(initialData?.diagnosis));
+  const [plan, setPlan] = useState(str(initialData?.plan));
+  const [notes, setNotes] = useState(str(initialNotes));
 
   const setCell = (si: number, r: number, c: number, value: string) => {
     setSections((prev) =>
@@ -84,10 +122,8 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
   function buildExamDateIso(): string | null {
     if (!examDate) return null;
     const d = examDate.toDate();
-    const m = /^(\d{1,2}):(\d{2})$/.exec(examTime.trim());
-    if (m) {
-      d.setHours(Number(m[1]), Number(m[2]), 0, 0);
-    }
+    // Exams are date-only; store at local midnight.
+    d.setHours(0, 0, 0, 0);
     return d.toISOString();
   }
 
@@ -159,17 +195,27 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
 
     setSaving(true);
     try {
-      const res = await createExamination({
+      const payload = {
         patient_id: patientId,
         exam_date: iso,
         data,
         notes: notes.trim() || null,
-      });
-      if ("error" in res && res.error) {
-        toast.error(res.error);
-        return;
+      };
+      if (mode === "edit" && examId) {
+        const res = await updateExamination(examId, payload);
+        if (res.error) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success("معاینه با موفقیت ویرایش شد.");
+      } else {
+        const res = await createExamination(payload);
+        if ("error" in res && res.error) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success("معاینه با موفقیت ثبت شد.");
       }
-      toast.success("معاینه با موفقیت ثبت شد.");
       router.push(`/patients/${patientId}?tab=exams`);
     } finally {
       setSaving(false);
@@ -206,28 +252,15 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* date & time */}
+      {/* date */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>تاریخ معاینه *</Label>
-            <PersianDatePicker
-              value={examDate}
-              onChange={setExamDate}
-              placeholder="انتخاب تاریخ"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="exam_time">ساعت (اختیاری)</Label>
-            <Input
-              id="exam_time"
-              dir="ltr"
-              type="time"
-              value={examTime}
-              onChange={(e) => setExamTime(e.target.value)}
-              className="text-left"
-            />
-          </div>
+        <div className="max-w-sm space-y-2">
+          <Label>تاریخ معاینه *</Label>
+          <PersianDatePicker
+            value={examDate}
+            onChange={setExamDate}
+            placeholder="انتخاب تاریخ"
+          />
         </div>
       </div>
 
@@ -544,7 +577,11 @@ export function ExamForm({ patientId, patientName, config }: ExamFormProps) {
           ) : (
             <Save className="size-4" />
           )}
-          {saving ? "در حال ذخیره…" : "ثبت معاینه"}
+          {saving
+            ? "در حال ذخیره…"
+            : mode === "create"
+              ? "ثبت معاینه"
+              : "ذخیره تغییرات"}
         </Button>
         <Button type="button" variant="ghost" disabled={saving} asChild>
           <Link href={`/patients/${patientId}`}>انصراف</Link>

@@ -71,6 +71,7 @@ export function ExamForm({
     od: { sc: str(initialData?.va?.od?.sc), cc: str(initialData?.va?.od?.cc) },
     os: { sc: str(initialData?.va?.os?.sc), cc: str(initialData?.va?.os?.cc) },
   });
+  const [cc, setCc] = useState(str(initialData?.cc));
   const [refractionDry, setRefractionDry] = useState<{ od: RefEye; os: RefEye }>({
     od: {
       sph: num(initialData?.refractionDry?.od?.sph),
@@ -154,6 +155,7 @@ export function ExamForm({
     }));
 
     const data: ExamData = {
+      cc: cc.trim() || null,
       va: {
         od: { sc: va.od.sc.trim() || null, cc: va.od.cc.trim() || null },
         os: { sc: va.os.sc.trim() || null, cc: va.os.cc.trim() || null },
@@ -262,6 +264,18 @@ export function ExamForm({
             placeholder="انتخاب تاریخ"
           />
         </div>
+      </div>
+
+      {/* cc */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <h2 className="mb-4 font-semibold">CC</h2>
+        <Input
+          dir="ltr"
+          placeholder="مثلاً 6/6"
+          value={cc}
+          onChange={(e) => setCc(e.target.value)}
+          className="h-10"
+        />
       </div>
 
       {/* visual acuity */}
@@ -534,8 +548,9 @@ export function ExamForm({
           <Label htmlFor="exam_notes">F — یادداشت / فوندوس</Label>
           <Textarea
             id="exam_notes"
+            dir="ltr"
             rows={6}
-            placeholder="یادداشت آزاد معاینه…"
+            placeholder="Exam notes / Fundus…"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
@@ -548,8 +563,9 @@ export function ExamForm({
           <Label htmlFor="exam_diagnosis">تشخیص</Label>
           <Textarea
             id="exam_diagnosis"
+            dir="ltr"
             rows={4}
-            placeholder="تشخیص پزشک…"
+            placeholder="Diagnosis…"
             value={diagnosis}
             onChange={(e) => setDiagnosis(e.target.value)}
           />
@@ -562,8 +578,9 @@ export function ExamForm({
           <Label htmlFor="exam_plan">پلن</Label>
           <Textarea
             id="exam_plan"
+            dir="ltr"
             rows={4}
-            placeholder="طرح درمان / پلن…"
+            placeholder="Treatment plan / Plan…"
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
           />

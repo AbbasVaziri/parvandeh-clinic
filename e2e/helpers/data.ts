@@ -237,8 +237,13 @@ export async function fillExamForm(page: Page, values: ExamValues): Promise<void
   if (values.cycloOdAxis !== undefined) await sectionInput(page, "Cyclo", 0, 2).fill(values.cycloOdAxis);
   if (values.cycloOsAxis !== undefined) await sectionInput(page, "Cyclo", 1, 2).fill(values.cycloOsAxis);
 
-  // First custom section (configurable via settings) sits after the Cyclo card.
-  const custom = page.locator("form > div").nth(4).getByRole("table");
+  // First custom section (configurable via settings) sits right after the Cyclo card.
+  const custom = page
+    .locator("h2")
+    .filter({ hasText: "Cyclo" })
+    .locator("..")
+    .locator("xpath=following-sibling::*[1]")
+    .getByRole("table");
   for (const [key, value] of Object.entries(values.customCells ?? {})) {
     const [r, c] = key.split(":").map(Number);
     await custom

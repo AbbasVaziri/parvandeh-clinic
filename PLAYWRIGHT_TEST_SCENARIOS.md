@@ -255,7 +255,7 @@ address, notes, «ثبت / آخرین ویرایش» timestamps.
 #### PAT-P-04 — Exams tab with data
 **Steps:** Open a patient with 2 exams.
 **Expected:** Exams listed newest-first with Persian date badges («معاینه ۲» …
-«معاینه ۱») and full V/A, Dry, Cyclo tables, diagnosis/plan/custom sections.
+«معاینه ۱») and full CC, V/A, Dry, Cyclo tables, diagnosis/plan/custom sections.
 
 #### PAT-P-05 — Docs tab empty state
 **Steps:** Open a patient with no documents → «مدارک» tab.
@@ -324,13 +324,19 @@ the updated values on the exam card.
 **Steps:** Click «انصراف» on the exam form.
 **Expected:** Back to `/patients/[id]`; no exam created.
 
+#### EX-C-10 — CC field (2nd position)
+**Steps:** On `/patients/[id]/examinations/new`, the «CC» box appears right after
+the date card; fill the CC input and save.
+**Expected:** Value persists — shown in the exam view and on the patient profile
+exam card. Editing pre-fills the saved CC value.
+
 ---
 
 ### 2.7 Examination view (`EX-V`)
 
 #### EX-V-01 — Read-only rendering
 **Steps:** Open `/examinations/[id]` for an exam with partial data.
-**Expected:** V/A, Dry, Cyclo tables render with `—` for empty cells; diagnosis /
+**Expected:** CC value + V/A, Dry, Cyclo tables render with `—` for empty cells; diagnosis /
 plan / custom sections / notes render only when present; «معاینه» title + Persian
 date badge.
 

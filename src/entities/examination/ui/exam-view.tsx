@@ -23,6 +23,19 @@ export function ExamDataView({ data, notes }: { data: ExamData; notes?: string |
   return (
     <div className="space-y-8">
       <section>
+        <SectionTitle>CC</SectionTitle>
+        <div className="overflow-hidden rounded-lg border" dir="ltr">
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell className="text-center">{dash(data.cc)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </section>
+
+      <section>
         <SectionTitle>حدت بینایی (V/A)</SectionTitle>
         <div className="overflow-hidden rounded-lg border" dir="ltr">
           <Table>
@@ -112,7 +125,7 @@ export function ExamDataView({ data, notes }: { data: ExamData; notes?: string |
       {data.diagnosis && (
         <section>
           <SectionTitle>تشخیص</SectionTitle>
-          <p className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm leading-7">
+          <p dir="ltr" className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm leading-7">
             {data.diagnosis}
           </p>
         </section>
@@ -121,7 +134,7 @@ export function ExamDataView({ data, notes }: { data: ExamData; notes?: string |
       {data.plan && (
         <section>
           <SectionTitle>پلن</SectionTitle>
-          <p className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm leading-7">
+          <p dir="ltr" className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm leading-7">
             {data.plan}
           </p>
         </section>
@@ -160,7 +173,7 @@ export function ExamDataView({ data, notes }: { data: ExamData; notes?: string |
       {notes ? (
         <section>
           <SectionTitle>F — یادداشت / فوندوس</SectionTitle>
-          <p className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm leading-7">
+          <p dir="ltr" className="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm leading-7">
             {notes}
           </p>
         </section>

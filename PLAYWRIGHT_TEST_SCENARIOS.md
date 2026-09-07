@@ -6,7 +6,7 @@ preconditions, the steps, and the expected result, including the exact Persian
 UI strings to assert against.
 
 - **App**: سامانه پرونده بیماران — an ophthalmic clinic patient-records panel
-- **Stack**: Next.js 16 (App Router, RSC + Server Actions), Supabase (Postgres + Auth + Storage), shadcn/ui, react-hook-form + zod, sonner toasts
+- **Stack**: Next.js 16 (App Router, RSC + Server Actions), PostgreSQL + next-auth (credentials), local filesystem storage, shadcn/ui, react-hook-form + zod, sonner toasts
 - **Locale**: RTL Persian UI; numbers displayed as Persian digits (۰۱۲۳۴۵۶۷۸۹) unless inside `dir="ltr"` inputs
 - **Routes**: `/login`, `/` (dashboard), `/patients`, `/patients/new`, `/patients/[id]`, `/patients/[id]/edit`, `/patients/[id]/examinations/new`, `/examinations/[id]`, `/settings`
 
@@ -19,17 +19,17 @@ UI strings to assert against.
 | Base URL | `http://localhost:3000` (start with `npm run dev` or `npm run build && npm start`) |
 | Reception account | `reception@clinic.local` / `Reception@1234` (from `npm run seed`) |
 | Doctor account | `doctor@clinic.local` / `Doctor@1234` (from `npm run seed`) |
-| DB setup | `npm run db:migrate` or run `supabase/migrations/0001_init.sql` in the Supabase SQL Editor |
+| DB setup | `npm run db:migrate` (applies `migrations/*.sql` against `DATABASE_URL`) |
 | Bulk test data | `node scripts/generate-fake-data.mjs [count]` → produces `supabase/seed/fake-patients.sql` (deterministic, seeded RNG) — use it to test search + pagination at scale |
-| RLS | Both staff users (`authenticated`) have full read/write access to all tables — no role-based UI differences exist in the MVP |
+| Auth model | Both staff users have full access to all data — no role-based UI differences exist in the MVP |
 
 ### Recommended Playwright setup
 
 - **Shared auth state**: sign in once and reuse via `storageState` in
   `playwright.config.ts` so the majority of specs skip the login flow.
 - **Isolation**: create patients/exams/documents through the UI in `beforeEach`
-  and clean up via Supabase (service role) in `afterEach`, or scope data to a
-  unique name/national-id per run to avoid duplicate-key failures.
+  and clean up in `afterEach`, or scope data to a unique name/national-id per run
+  to avoid duplicate-key failures.
 - **Unique national ID helper**: Iranian national IDs have a 10-digit checksum
   (`src/shared/lib/persian.ts` → `isValidNationalId`). A valid fixture example:
   `0451727304`. Generate fresh valid IDs in a helper rather than hard-coding one.

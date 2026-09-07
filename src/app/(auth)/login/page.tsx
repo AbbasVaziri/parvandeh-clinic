@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Eye } from "lucide-react";
-import { createClient } from "@/shared/lib/supabase/server";
+import { auth } from "@/shared/lib/auth";
 import { LoginForm } from "@/features/auth/ui/login-form";
 
 export const metadata: Metadata = { title: "ورود" };
@@ -11,11 +11,8 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) redirect("/");
+  const session = await auth();
+  if (session?.user) redirect("/");
 
   const { next } = await searchParams;
 

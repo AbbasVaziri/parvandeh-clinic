@@ -6,7 +6,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Before running (see AGENTS.md → "Playwright E2E tests"):
  *   1. npm install                 (includes @playwright/test)
  *   2. npx playwright install chromium
- *   3. Configure .env.local with a reachable Supabase project
+ *   3. Configure .env.local with a reachable PostgreSQL database + AUTH_SECRET
  *   4. npm run db:migrate  &&  npm run seed   (tables + staff accounts)
  *   5. npm run test:e2e
  *

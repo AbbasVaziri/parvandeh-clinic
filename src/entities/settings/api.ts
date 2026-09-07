@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/shared/lib/supabase/server";
+import { db } from "@/shared/lib/db";
 import { faDbError } from "@/shared/lib/errors";
 import {
   DEFAULT_CLINIC_NAME,
@@ -17,25 +17,21 @@ function asStringArray(v: unknown): string[] {
 }
 
 export async function getClinicName(): Promise<string> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("settings")
-    .select("value")
-    .eq("key", "clinic")
-    .maybeSingle();
-  const name = (data?.value as ClinicSettings | null)?.name;
+  const { rows } = await db.query<{ value: unknown }>(
+    "select value from settings where key = $1",
+    ["clinic"]
+  );
+  const name = (rows[0]?.value as ClinicSettings | null)?.name;
   return name?.trim() || DEFAULT_CLINIC_NAME;
 }
 
 export async function getExamFormSettings(): Promise<ExamFormSettings> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("settings")
-    .select("value")
-    .eq("key", "exam_form")
-    .maybeSingle();
+  const { rows } = await db.query<{ value: unknown }>(
+    "select value from settings where key = $1",
+    ["exam_form"]
+  );
 
-  const raw = data?.value as ExamFormSettings | null;
+  const raw = rows[0]?.value as ExamFormSettings | null;
   if (!raw || !Array.isArray(raw.customSections)) return DEFAULT_EXAM_CONFIG;
 
   const customSections: CustomSectionConfig[] = raw.customSections.map((s, i) => ({
@@ -52,21 +48,19 @@ export async function updateClinicSettings(
   clinicName: string,
   customSections: CustomSectionConfig[]
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-
   const clinic: ClinicSettings = { name: clinicName.trim() || DEFAULT_CLINIC_NAME };
   const examForm: ExamFormSettings = { customSections };
 
-  const { error } = await supabase
-    .from("settings")
-    .upsert(
-      [
-        { key: "clinic", value: clinic },
-        { key: "exam_form", value: examForm },
-      ],
-      { onConflict: "key" }
+  try {
+    await db.query(
+      `insert into settings (key, value, updated_at)
+       values ('clinic', $1, now()), ('exam_form', $2, now())
+       on conflict (key) do update
+         set value = excluded.value, updated_at = now()`,
+      [JSON.stringify(clinic), JSON.stringify(examForm)]
     );
-
-  if (error) return { error: faDbError(error) };
-  return {};
+    return {};
+  } catch (error) {
+    return { error: faDbError(error as { code?: string; message?: string }) };
+  }
 }

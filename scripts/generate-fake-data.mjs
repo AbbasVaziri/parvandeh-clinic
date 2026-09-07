@@ -3,7 +3,7 @@
  * (+ a sprinkle of examinations) so the clinic can test search & UI at scale.
  *
  * Usage:  node scripts/generate-fake-data.mjs [count]   (default 10000)
- * Then run the generated file in Supabase → SQL Editor.
+ * Then run the generated file against your PostgreSQL database.
  * Deterministic output (seeded RNG) — same file every run.
  */
 import { writeFileSync, mkdirSync } from "node:fs";

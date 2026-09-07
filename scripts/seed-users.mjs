@@ -1,9 +1,10 @@
 /**
  * Seeds the two staff accounts for the clinic panel.
  * Usage:  npm run seed   (reads .env.local / environment variables)
- * Requires: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) + SUPABASE_SERVICE_ROLE_KEY
+ * Requires: DATABASE_URL
  */
-import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
+import bcrypt from "bcryptjs";
 import { readFileSync } from "node:fs";
 
 // Load .env.local manually so `node scripts/seed-users.mjs` works without dotenv.
@@ -16,19 +17,14 @@ try {
   /* .env.local optional if env vars are set externally */
 }
 
-const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!url || !serviceKey) {
-  console.error(
-    "Missing SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Fill .env.local first."
-  );
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error("Missing DATABASE_URL. Fill .env.local first.");
   process.exit(1);
 }
 
-const admin = createClient(url, serviceKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const useSsl = process.env.DATABASE_SSL === "true";
+const client = new pg.Client({ connectionString, ssl: useSsl ? { rejectUnauthorized: false } : false });
 
 const USERS = [
   {
@@ -45,32 +41,42 @@ const USERS = [
   },
 ];
 
-for (const u of USERS) {
-  const { data, error } = await admin.auth.admin.createUser({
-    email: u.email,
-    password: u.password,
-    email_confirm: true,
-    user_metadata: { full_name: u.full_name, role_label: u.role_label },
-  });
+try {
+  await client.connect();
 
-  if (error) {
-    if (/already|registered/i.test(error.message)) {
+  for (const u of USERS) {
+    const { rows } = await client.query(
+      "select id from public.users where lower(email) = lower($1)",
+      [u.email]
+    );
+
+    let userId = rows[0]?.id;
+
+    if (userId) {
       console.log(`• ${u.email} already exists — skipped`);
     } else {
-      console.error(`✕ ${u.email}:`, error.message);
+      const passwordHash = bcrypt.hashSync(u.password, 10);
+      const { rows: inserted } = await client.query(
+        `insert into public.users (email, password_hash)
+         values ($1, $2)
+         returning id`,
+        [u.email, passwordHash]
+      );
+      userId = inserted[0].id;
+      await client.query(
+        `insert into public.profiles (id, full_name, role_label)
+         values ($1, $2, $3)
+         on conflict (id) do nothing`,
+        [userId, u.full_name, u.role_label]
+      );
+      console.log(`✓ created ${u.email}`);
     }
-    continue;
   }
 
-  // Ensure the profile row exists even if the DB trigger has not run yet.
-  if (data?.user) {
-    await admin.from("profiles").upsert({
-      id: data.user.id,
-      full_name: u.full_name,
-      role_label: u.role_label,
-    });
-  }
-  console.log(`✓ created ${u.email}`);
+  console.log("\nSeeding done. Login with these accounts in the app.");
+} catch (err) {
+  console.error("✕ Seeding failed:", err.message);
+  process.exitCode = 1;
+} finally {
+  await client.end();
 }
-
-console.log("\nSeeding done. Login with these accounts in the app.");

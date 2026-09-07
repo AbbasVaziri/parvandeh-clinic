@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/shared/lib/supabase/server";
+import { db } from "@/shared/lib/db";
 import { faDbError } from "@/shared/lib/errors";
 import { toEnglishDigits } from "@/shared/lib/persian";
 import type { PatientPayload } from "@/shared/lib/validation";
@@ -18,34 +18,41 @@ export async function searchPatients(rawQuery: string): Promise<PatientSearchRes
   const q = sanitizeQuery(rawQuery);
   if (q.length < 2) return [];
 
-  const supabase = await createClient();
   const pattern = `%${q}%`;
 
-  const { data, error } = await supabase
-    .from("patients")
-    .select("id, first_name, last_name, national_id, mobile, avatar_path")
-    .or(
-      `full_name.ilike."${pattern}",national_id.ilike."${pattern}",mobile.ilike."${pattern}"`
-    )
-    .order("updated_at", { ascending: false })
-    .limit(20);
+  const { rows: patients } = await db.query<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    national_id: string | null;
+    mobile: string;
+    avatar_path: string | null;
+  }>(
+    `select id, first_name, last_name, national_id, mobile, avatar_path
+       from patients
+      where full_name ilike $1 or national_id ilike $1 or mobile ilike $1
+      order by updated_at desc
+      limit 20`,
+    [pattern]
+  );
 
-  if (error || !data) return [];
+  if (patients.length === 0) return [];
 
-  const ids = data.map((p) => p.id);
+  const ids = patients.map((p) => p.id);
+  const { rows: exams } = await db.query<{ patient_id: string; exam_date: string }>(
+    `select patient_id, exam_date
+       from examinations
+      where patient_id = any($1::uuid[])
+      order by exam_date desc`,
+    [ids]
+  );
+
   const lastExam = new Map<string, string>();
-  if (ids.length > 0) {
-    const { data: exams } = await supabase
-      .from("examinations")
-      .select("patient_id, exam_date")
-      .in("patient_id", ids)
-      .order("exam_date", { ascending: false });
-    for (const e of exams ?? []) {
-      if (!lastExam.has(e.patient_id)) lastExam.set(e.patient_id, e.exam_date);
-    }
+  for (const e of exams) {
+    if (!lastExam.has(e.patient_id)) lastExam.set(e.patient_id, e.exam_date);
   }
 
-  return data.map((p) => ({
+  return patients.map((p) => ({
     id: p.id,
     first_name: p.first_name,
     last_name: p.last_name,
@@ -57,19 +64,16 @@ export async function searchPatients(rawQuery: string): Promise<PatientSearchRes
 }
 
 export async function getPatientById(id: string): Promise<Patient | null> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("patients").select("*").eq("id", id).maybeSingle();
-  return (data as Patient | null) ?? null;
+  const { rows } = await db.query<Patient>("select * from patients where id = $1", [id]);
+  return rows[0] ?? null;
 }
 
 export async function listPatients(limit = 100): Promise<Patient[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("patients")
-    .select("*")
-    .order("updated_at", { ascending: false })
-    .limit(limit);
-  return (data as Patient[] | null) ?? [];
+  const { rows } = await db.query<Patient>(
+    "select * from patients order by updated_at desc limit $1",
+    [limit]
+  );
+  return rows;
 }
 
 export async function listPatientsPaginated(
@@ -77,36 +81,41 @@ export async function listPatientsPaginated(
   pageSize: number,
   search?: string,
 ): Promise<{ patients: Patient[]; total: number }> {
-  const supabase = await createClient();
   const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
 
-  let query = supabase
-    .from("patients")
-    .select("*", { count: "exact" })
-    .order("updated_at", { ascending: false });
+  let where = "";
+  const params: unknown[] = [];
 
   if (search && search.length >= 2) {
     const pattern = `%${sanitizeQuery(search)}%`;
-    query = query.or(
-      `full_name.ilike."${pattern}",national_id.ilike."${pattern}",mobile.ilike."${pattern}"`,
-    );
+    params.push(pattern);
+    where = `where full_name ilike $1 or national_id ilike $1 or mobile ilike $1`;
   }
 
-  const { data, count } = await query.range(from, to);
+  const { rows } = await db.query<Patient>(
+    `select * from patients ${where}
+      order by updated_at desc
+      limit $${params.length + 1} offset $${params.length + 2}`,
+    [...params, pageSize, from]
+  );
+
+  const countParams = params.length > 0 ? [params[0]] : [];
+  const { rows: countRows } = await db.query<{ n: string }>(
+    `select count(*)::text as n from patients ${where}`,
+    countParams
+  );
 
   return {
-    patients: (data as Patient[] | null) ?? [],
-    total: count ?? 0,
+    patients: rows,
+    total: Number(countRows[0]?.n ?? 0),
   };
 }
 
 export async function countPatients(): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("patients")
-    .select("id", { count: "exact", head: true });
-  return count ?? 0;
+  const { rows } = await db.query<{ n: string }>(
+    "select count(*)::text as n from patients"
+  );
+  return Number(rows[0]?.n ?? 0);
 }
 
 export async function nationalIdExists(
@@ -114,52 +123,74 @@ export async function nationalIdExists(
   excludeId?: string
 ): Promise<boolean> {
   if (!nationalId) return false;
-  const supabase = await createClient();
-  let query = supabase
-    .from("patients")
-    .select("id")
-    .eq("national_id", nationalId)
-    .limit(1);
-  if (excludeId) query = query.neq("id", excludeId);
-  const { data } = await query;
-  return Boolean(data && data.length > 0);
+  const { rows } = await db.query<{ id: string }>(
+    `select id from patients
+      where national_id = $1 ${excludeId ? "and id <> $2" : ""}
+      limit 1`,
+    excludeId ? [nationalId, excludeId] : [nationalId]
+  );
+  return rows.length > 0;
 }
 
 export async function createPatient(
   values: PatientPayload
 ): Promise<{ id: string } | { error: string }> {
-  const supabase = await createClient();
-
   if (await nationalIdExists(values.national_id)) {
     return { error: "بیماری با این کد ملی قبلاً ثبت شده است." };
   }
 
-  const { data, error } = await supabase
-    .from("patients")
-    .insert(values)
-    .select("id")
-    .single();
-
-  if (error || !data) return { error: faDbError(error) };
-  return { id: data.id };
+  try {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into patients (first_name, last_name, national_id, mobile, birth_date, address, notes)
+       values ($1, $2, $3, $4, $5, $6, $7)
+       returning id`,
+      [
+        values.first_name,
+        values.last_name,
+        values.national_id || null,
+        values.mobile,
+        values.birth_date || null,
+        values.address || null,
+        values.notes || null,
+      ]
+    );
+    return { id: rows[0].id };
+  } catch (error) {
+    return { error: faDbError(error as { code?: string; message?: string }) };
+  }
 }
 
 export async function updatePatient(
   id: string,
   values: PatientPayload
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-
   if (await nationalIdExists(values.national_id, id)) {
     return { error: "بیمار دیگری با این کد ملی ثبت شده است." };
   }
 
-  const { error } = await supabase.from("patients").update(values).eq("id", id);
-  if (error) return { error: faDbError(error) };
-  return {};
+  try {
+    await db.query(
+      `update patients
+          set first_name = $1, last_name = $2, national_id = $3, mobile = $4,
+              birth_date = $5, address = $6, notes = $7
+        where id = $8`,
+      [
+        values.first_name,
+        values.last_name,
+        values.national_id || null,
+        values.mobile,
+        values.birth_date || null,
+        values.address || null,
+        values.notes || null,
+        id,
+      ]
+    );
+    return {};
+  } catch (error) {
+    return { error: faDbError(error as { code?: string; message?: string }) };
+  }
 }
 
 export async function setPatientAvatar(patientId: string, path: string): Promise<void> {
-  const supabase = await createClient();
-  await supabase.from("patients").update({ avatar_path: path }).eq("id", patientId);
+  await db.query("update patients set avatar_path = $1 where id = $2", [path, patientId]);
 }

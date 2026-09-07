@@ -39,6 +39,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# uploaded files (local filesystem storage)
+/uploads
+
 # vercel
 .vercel
 

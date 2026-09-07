@@ -1,24 +1,32 @@
-import { SIGNED_URL_TTL } from "@/shared/lib/constants";
-import { createClient } from "@/shared/lib/supabase/server";
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import { UPLOADS_DIR, UPLOADS_URL_PREFIX } from "@/shared/lib/constants";
 
 export async function createFileUrl(
-  path: string,
-  expiresIn: number = SIGNED_URL_TTL
+  storagePath: string
 ): Promise<string | null> {
-  if (!path) return null;
-  const supabase = await createClient();
-  const { data } = await supabase.storage
-    .from("patient-documents")
-    .createSignedUrl(path, expiresIn);
-  return data?.signedUrl ?? null;
+  if (!storagePath) return null;
+  return `${UPLOADS_URL_PREFIX}/${encodePathSegments(storagePath)}`;
+}
+
+async function absolutePath(storagePath: string): Promise<string> {
+  const abs = path.join(UPLOADS_DIR, storagePath);
+  const root = path.resolve(UPLOADS_DIR);
+  if (!abs.startsWith(root)) throw new Error("Invalid storage path");
+  return abs;
 }
 
 export async function deleteFile(
-  path: string
+  storagePath: string
 ): Promise<{ error: Error | null }> {
-  const supabase = await createClient();
-  const { error } = await supabase.storage
-    .from("patient-documents")
-    .remove([path]);
-  return { error };
+  try {
+    await unlink(await absolutePath(storagePath));
+    return { error: null };
+  } catch (error) {
+    return { error: error instanceof Error ? error : new Error(String(error)) };
+  }
+}
+
+function encodePathSegments(storagePath: string): string {
+  return storagePath.split("/").map(encodeURIComponent).join("/");
 }

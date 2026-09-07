@@ -1,42 +1,29 @@
 -- ============================================================================
 -- Clinic Patient Records — initial schema (idempotent; safe to run twice)
--- Run this whole file in: Supabase Dashboard → SQL Editor → New query
+-- The app is its own backend: direct PostgreSQL + next-auth.
 -- ============================================================================
 
 create extension if not exists pg_trgm;
 
 -- ----------------------------------------------------------------------------
--- profiles (display info for the two staff users; auto-created on signup)
+-- users (staff accounts; passwords hashed with bcrypt)
+-- ----------------------------------------------------------------------------
+create table if not exists public.users (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  password_hash text not null,
+  created_at timestamptz not null default now()
+);
+
+-- ----------------------------------------------------------------------------
+-- profiles (display info for staff users)
 -- ----------------------------------------------------------------------------
 create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
+  id uuid primary key references public.users(id) on delete cascade,
   full_name text,
   role_label text,
   created_at timestamptz not null default now()
 );
-
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.profiles (id, full_name, role_label)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data ->> 'role_label', 'کاربر')
-  )
-  on conflict (id) do nothing;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
 
 -- ----------------------------------------------------------------------------
 -- patients
@@ -70,7 +57,7 @@ create table if not exists public.examinations (
   exam_date timestamptz not null default now(),
   data jsonb not null default '{}'::jsonb,
   notes text,
-  created_by uuid references auth.users(id) on delete set null,
+  created_by uuid references public.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -79,7 +66,7 @@ create index if not exists examinations_patient_date_idx
   on public.examinations (patient_id, exam_date desc);
 
 -- ----------------------------------------------------------------------------
--- documents (metadata only — binaries live in Storage)
+-- documents (metadata only — binaries live on the local filesystem)
 -- ----------------------------------------------------------------------------
 create table if not exists public.documents (
   id uuid primary key default gen_random_uuid(),
@@ -90,7 +77,7 @@ create table if not exists public.documents (
   file_name text,
   mime_type text,
   size_bytes bigint,
-  uploaded_by uuid references auth.users(id) on delete set null,
+  uploaded_by uuid references public.users(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -141,70 +128,3 @@ drop trigger if exists examinations_set_updated_at on public.examinations;
 create trigger examinations_set_updated_at
   before update on public.examinations
   for each row execute function public.set_updated_at();
-
--- ----------------------------------------------------------------------------
--- Row Level Security: both staff users (authenticated) have full access.
--- No roles/permissions system for MVP.
--- ----------------------------------------------------------------------------
-alter table public.profiles enable row level security;
-alter table public.patients enable row level security;
-alter table public.examinations enable row level security;
-alter table public.documents enable row level security;
-alter table public.settings enable row level security;
-
-drop policy if exists staff_all_profiles on public.profiles;
-create policy staff_all_profiles on public.profiles
-  for all to authenticated using (true) with check (true);
-
-drop policy if exists staff_all_patients on public.patients;
-create policy staff_all_patients on public.patients
-  for all to authenticated using (true) with check (true);
-
-drop policy if exists staff_all_examinations on public.examinations;
-create policy staff_all_examinations on public.examinations
-  for all to authenticated using (true) with check (true);
-
-drop policy if exists staff_all_documents on public.documents;
-create policy staff_all_documents on public.documents
-  for all to authenticated using (true) with check (true);
-
-drop policy if exists staff_all_settings on public.settings;
-create policy staff_all_settings on public.settings
-  for all to authenticated using (true) with check (true);
-
--- ----------------------------------------------------------------------------
--- Storage: private bucket for patient files + staff policies
--- ----------------------------------------------------------------------------
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'patient-documents',
-  'patient-documents',
-  false,
-  10485760,
-  array['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf']
-)
-on conflict (id) do update
-  set public = false,
-      file_size_limit = excluded.file_size_limit,
-      allowed_mime_types = excluded.allowed_mime_types;
-
-drop policy if exists staff_read_patient_documents on storage.objects;
-create policy staff_read_patient_documents on storage.objects
-  for select to authenticated
-  using (bucket_id = 'patient-documents');
-
-drop policy if exists staff_insert_patient_documents on storage.objects;
-create policy staff_insert_patient_documents on storage.objects
-  for insert to authenticated
-  with check (bucket_id = 'patient-documents');
-
-drop policy if exists staff_update_patient_documents on storage.objects;
-create policy staff_update_patient_documents on storage.objects
-  for update to authenticated
-  using (bucket_id = 'patient-documents')
-  with check (bucket_id = 'patient-documents');
-
-drop policy if exists staff_delete_patient_documents on storage.objects;
-create policy staff_delete_patient_documents on storage.objects
-  for delete to authenticated
-  using (bucket_id = 'patient-documents');

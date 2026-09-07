@@ -74,7 +74,7 @@ export function UploadDialog({ patientId }: UploadDialogProps) {
       const ext = (file.name.split(".").pop() || "bin").toLowerCase();
       const path = `patients/${patientId}/${crypto.randomUUID()}.${ext}`;
 
-      const { error: uploadError } = await uploadFile(path, file, file.type);
+      const { error: uploadError } = await uploadFile(path, file);
 
       if (uploadError) {
         toast.error("بارگذاری فایل ناموفق بود. دوباره تلاش کنید.");

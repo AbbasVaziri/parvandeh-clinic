@@ -17,8 +17,8 @@ is documented in `PLAYWRIGHT_TEST_SCENARIOS.md` (at the repo root).
 
 1. `npm install` (includes `@playwright/test`)
 2. `npx playwright install chromium` — downloads the browser once per machine
-3. Configure a reachable Supabase project in `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`; optionally `DATABASE_URL`)
+3. Configure a reachable PostgreSQL database in `.env.local` (`DATABASE_URL`,
+   `AUTH_SECRET`)
 4. `npm run db:migrate` then `npm run seed` — creates the schema and the two
    staff accounts (`reception@clinic.local`, `doctor@clinic.local`)
 
@@ -59,6 +59,6 @@ started yourself. Override the target with `PLAYWRIGHT_BASE_URL`.
 - **Global setup can't log in** → the DB has no seeded accounts; run `npm run seed`.
 - **Pagination tests skip** → they need ≥ 21 patients; generate bulk data with
   `node scripts/generate-fake-data.mjs` and run the resulting
-  `supabase/seed/fake-patients.sql`.
+  `migrations/seed/fake-patients.sql` (created as `supabase/seed/fake-patients.sql`).
 - **Selectors drift** after UI changes — update both the spec and the scenario
   in `PLAYWRIGHT_TEST_SCENARIOS.md` so the docs stay the single source of truth.

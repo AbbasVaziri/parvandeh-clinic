@@ -42,7 +42,7 @@ export default async function SettingsPage() {
         </div>
         <p className="mt-4 text-xs leading-6 text-muted-foreground">
           این سامانه فقط دو کاربر (پذیرش و پزشک) دارد و هر دو به همه اطلاعات دسترسی
-          دارند. برای تغییر رمز عبور، از پنل Supabase بخش Authentication اقدام کنید.
+          دارند. تغییر رمز عبور حساب کاربری در حال حاضر از طریق اسکریپت seed انجام می‌شود.
         </p>
       </div>
     </div>

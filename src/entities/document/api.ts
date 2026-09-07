@@ -1,7 +1,8 @@
 "use server";
 
-import { createClient } from "@/shared/lib/supabase/server";
+import { db } from "@/shared/lib/db";
 import { faDbError } from "@/shared/lib/errors";
+import { auth } from "@/shared/lib/auth";
 import {
   createFileUrl,
   deleteFile,
@@ -11,18 +12,15 @@ import type { NewDocumentMetadata, PatientDocument } from "./model";
 export async function listDocumentsByPatient(
   patientId: string
 ): Promise<PatientDocument[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("patient_id", patientId)
-    .order("created_at", { ascending: false });
+  const { rows } = await db.query<PatientDocument>(
+    "select * from documents where patient_id = $1 order by created_at desc",
+    [patientId]
+  );
 
-  const docs = (data as PatientDocument[] | null) ?? [];
-  if (docs.length === 0) return docs;
+  if (rows.length === 0) return rows;
 
   const withUrls = await Promise.all(
-    docs.map(async (doc) => ({
+    rows.map(async (doc) => ({
       ...doc,
       url: await createFileUrl(doc.storage_path),
     }))
@@ -33,46 +31,53 @@ export async function listDocumentsByPatient(
 export async function addDocumentMetadata(
   values: NewDocumentMetadata
 ): Promise<{ id: string } | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
 
-  const { data, error } = await supabase
-    .from("documents")
-    .insert({ ...values, uploaded_by: user?.id ?? null })
-    .select("id")
-    .single();
-
-  if (error || !data) return { error: faDbError(error) };
-  return { id: data.id };
+  try {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into documents (patient_id, title, description, storage_path, file_name, mime_type, size_bytes, uploaded_by)
+       values ($1, $2, $3, $4, $5, $6, $7, $8)
+       returning id`,
+      [
+        values.patient_id,
+        values.title,
+        values.description,
+        values.storage_path,
+        values.file_name,
+        values.mime_type,
+        values.size_bytes,
+        userId,
+      ]
+    );
+    return { id: rows[0].id };
+  } catch (error) {
+    return { error: faDbError(error as { code?: string; message?: string }) };
+  }
 }
 
 export async function deleteDocument(id: string): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const { data: doc } = await supabase
-    .from("documents")
-    .select("storage_path")
-    .eq("id", id)
-    .maybeSingle();
+  const { rows } = await db.query<{ storage_path: string }>(
+    "select storage_path from documents where id = $1",
+    [id]
+  );
 
-  if (doc?.storage_path) {
-    const { error: storageError } = await deleteFile(doc.storage_path);
+  const storagePath = rows[0]?.storage_path;
+  if (storagePath) {
+    const { error: storageError } = await deleteFile(storagePath);
     // Object may already be gone — still remove the metadata row.
-    if (storageError && !storageError.message.includes("not found")) {
+    if (storageError && !storageError.message.includes("ENOENT")) {
       return { error: faDbError(storageError, "حذف فایل از انبار ناموفق بود.") };
     }
   }
 
-  const { error } = await supabase.from("documents").delete().eq("id", id);
-  if (error) return { error: faDbError(error) };
+  await db.query("delete from documents where id = $1", [id]);
   return {};
 }
 
 export async function countDocuments(): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("documents")
-    .select("id", { count: "exact", head: true });
-  return count ?? 0;
+  const { rows } = await db.query<{ n: string }>(
+    "select count(*)::text as n from documents"
+  );
+  return Number(rows[0]?.n ?? 0);
 }

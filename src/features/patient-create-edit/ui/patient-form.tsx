@@ -71,7 +71,7 @@ export function PatientForm({ mode, patient, avatarUrl }: PatientFormProps) {
   async function uploadAvatar(patientId: string, file: File) {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = `patients/${patientId}/avatar-${Date.now()}.${ext}`;
-    const { error } = await uploadFile(path, file, file.type);
+    const { error } = await uploadFile(path, file);
     if (error) {
       toast.error("بارگذاری عکس پروفایل ناموفق بود.");
       return;

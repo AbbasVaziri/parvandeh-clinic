@@ -1,7 +1,6 @@
 /**
- * Applies supabase/migrations/0001_init.sql via a direct Postgres connection.
+ * Applies migrations/*.sql via a direct Postgres connection.
  * Usage:  node scripts/apply-migration.mjs   (requires DATABASE_URL in .env.local)
- * If you don't have DATABASE_URL, paste the SQL file into Supabase → SQL Editor.
  */
 import pg from "pg";
 import { readFileSync, readdirSync } from "node:fs";
@@ -18,13 +17,13 @@ try {
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   console.error(
-    "DATABASE_URL is not set. Either add it to .env.local or run the SQL manually:\n" +
-      "  Supabase Dashboard → SQL Editor → paste every file in supabase/migrations/ in order → Run"
+    "DATABASE_URL is not set. Either add it to .env.local or run the SQL manually with another Postgres client."
   );
   process.exit(1);
 }
 
-const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
+const useSsl = process.env.DATABASE_SSL === "true";
+const client = new pg.Client({ connectionString, ssl: useSsl ? { rejectUnauthorized: false } : false });
 
 // All migrations are idempotent, so run every file in filename order.
 const files = readdirSync("supabase/migrations")

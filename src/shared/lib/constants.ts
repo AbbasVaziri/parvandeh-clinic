@@ -1,8 +1,14 @@
-export const DOCUMENT_BUCKET = "patient-documents";
+import path from "node:path";
 
 export const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10 MB
 export const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
-export const SIGNED_URL_TTL = 60 * 60; // 1 hour
+
+/** Absolute path where uploaded files are stored on the local filesystem. */
+export const UPLOADS_DIR =
+  process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
+
+/** URL prefix used to serve files back through the /api/documents route. */
+export const UPLOADS_URL_PREFIX = "/api/documents";
 
 export function isAllowedDocumentType(mime: string): boolean {
   return mime.startsWith("image/") || mime === "application/pdf";

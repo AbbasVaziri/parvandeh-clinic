@@ -7,7 +7,7 @@ import { RECEPTION } from "./helpers/auth";
  * `use.storageState`). Specs themselves never test the login flow.
  *
  * Prerequisite: `npm run seed` must have created the reception account, and
- * the app must be able to reach Supabase via `.env.local`.
+ * the app must be able to reach PostgreSQL via `DATABASE_URL` in `.env.local`.
  */
 export default async function globalSetup(
   config: FullConfig,
@@ -31,7 +31,7 @@ export default async function globalSetup(
     console.error(
       `✗ Could not sign in as ${RECEPTION.email}. ` +
         "Check that the dev server is up, .env.local points to a reachable " +
-        "Supabase project, and the seed accounts exist (`npm run seed`).",
+        "PostgreSQL database, and the seed accounts exist (`npm run seed`).",
     );
     throw error;
   } finally {

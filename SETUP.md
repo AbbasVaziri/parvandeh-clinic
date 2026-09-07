@@ -1,45 +1,38 @@
 # راه‌اندازی سامانه پرونده بیماران
 
+یک اپلیکیشن فول‌استک Next.js که از PostgreSQL مستقیم (بدون Supabase) و next-auth استفاده می‌کند.
+
 ## ۱) متغیرهای محیطی
 
 فایل `.env.local` را در ریشه پروژه بسازید (الگو: `.env.example`):
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...        # فقط برای اسکریپت‌های seed/migrate
-DATABASE_URL=postgresql://...           # اختیاری — برای اجرای خودکار migration
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+AUTH_SECRET=<خروجی openssl rand -base64 32>
 ```
 
-## ۲) ساخت جداول و انبار فایل
+- `AUTH_SECRET` را با دستور `openssl rand -base64 32` بسازید.
+- اگر PostgreSQL هاست‌شده است `DATABASE_SSL=true` را هم اضافه کنید.
 
- یکی از دو راه:
+## ۲) ساخت جداول و کاربران
 
-- **خودکار:** اگر `DATABASE_URL` را دارید:
-
-  ```bash
-  npm run db:migrate
-  ```
-
-- **دستی:** در داشبورد Supabase → **SQL Editor** → همه فایل‌های
-  `supabase/migrations/` را به ترتیب (0001، 0002 و…) paste کنید و Run بزنید.
-
-این migration شامل: جداول `patients`, `examinations`, `documents`, `profiles`, `settings`، ایندکس‌های جستجو، RLS و باکت خصوصی `patient-documents` است.
-
-## ۳) ساخت دو کاربر (پذیرش و پزشک)
+شروع کنید:
 
 ```bash
-npm run seed
+npm run db:migrate    # اعمال migrations/*.sql — ساخت جداول
+npm run seed          # ساخت دو کاربر (پذیرش و پزشک)
 ```
 
-حساب‌های پیش‌فرض:
+این migration شامل جداول `users`, `profiles`, `patients`, `examinations`, `documents`, `settings` و ایندکس‌های جستجو است.
+
+## ۳) دو کاربر پیش‌فرض
 
 | کاربر | ایمیل | رمز عبور |
 |---|---|---|
 | پذیرش | `reception@clinic.local` | `Reception@1234` |
 | پزشک | `doctor@clinic.local` | `Doctor@1234` |
 
-⚠️ رمزها را بعد از اولین ورود از پنل Supabase (Authentication → Users) تغییر دهید.
+برای تغییر رمز، فایل `scripts/seed-users.mjs` را اجرا کنید (یا آموزش استاندارد hashing را دنبال کنید).
 
 ## ۴) اجرای برنامه
 
